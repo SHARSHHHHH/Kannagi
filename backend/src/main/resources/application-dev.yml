@@ -1,0 +1,14 @@
+spring:
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    com.kannagi: DEBUG
+    org.hibernate.SQL: DEBUG
+
+app:
+  seed:
+    enabled: true   # loads DEMO accounts and DEMO PROFILE professionals

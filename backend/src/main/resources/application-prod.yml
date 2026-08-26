@@ -1,0 +1,14 @@
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
+logging:
+  level:
+    root: WARN
+    com.kannagi: INFO
+
+app:
+  seed:
+    enabled: false

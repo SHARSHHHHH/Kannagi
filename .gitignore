@@ -1,0 +1,28 @@
+# Env / secrets
+.env
+.env.local
+*.pem
+*.key
+
+# Java
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.log
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Runtime storage (uploaded audio etc.)
+/storage/
+backend/storage/

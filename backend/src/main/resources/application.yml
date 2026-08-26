@@ -1,0 +1,141 @@
+spring:
+  application:
+    name: kannagi-backend
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/app_db}
+    username: ${DATABASE_USERNAME:app_user}
+    password: ${DATABASE_PASSWORD:change_me_locally}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        format_sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    locations: classpath:db/migration
+
+  servlet:
+    multipart:
+      max-file-size: ${MAX_UPLOAD_SIZE_MB:15}MB
+      max-request-size: ${MAX_UPLOAD_SIZE_MB:15}MB
+
+  jackson:
+    default-property-inclusion: non_null
+
+  # Optional. Without these the verification code is logged and returned in the
+  # API response instead of being emailed, and the response says so.
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+server:
+  port: 8080
+  error:
+    include-stacktrace: never
+    include-message: never
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui/index.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+
+# ─────────────────────────────────────────────────────────────
+# Application configuration
+# ─────────────────────────────────────────────────────────────
+app:
+  brand:
+    name: ${APP_BRAND_NAME:Kannagi}
+    display-name: ${APP_BRAND_DISPLAY_NAME:Kannagi}
+    tagline: ${APP_BRAND_TAGLINE:Speak safely. Know what's possible. Decide what happens next.}
+    support-email: ${APP_BRAND_SUPPORT_EMAIL:support@example.com}
+
+  case-ref:
+    reference-prefix: ${APP_CASE_REF_PREFIX:KN}
+
+  security:
+    cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+    max-failed-logins: 5
+    lockout-minutes: 15
+    # DNS MX lookup on the email domain at registration. Catches invented
+    # domains and typos. Set false only if DNS is unavailable in your network.
+    verify-email-domain: ${VERIFY_EMAIL_DOMAIN:true}
+
+  jwt:
+    issuer: ${JWT_ISSUER:kannagi-api}
+    secret: ${JWT_SECRET:ZGV2LW9ubHktaW5zZWN1cmUtc2VjcmV0LXJlcGxhY2UtaW4tcHJvZC0wMDAwMDAwMDA=}
+    refresh-secret: ${JWT_REFRESH_SECRET:ZGV2LW9ubHktaW5zZWN1cmUtcmVmcmVzaC1yZXBsYWNlLWluLXByb2QtMDAwMDAwMA==}
+    access-ttl-seconds: ${JWT_ACCESS_TTL_SECONDS:900}
+    refresh-ttl-seconds: ${JWT_REFRESH_TTL_SECONDS:1209600}
+
+  crypto:
+    encryption-key: ${ENCRYPTION_KEY:ZGV2LW9ubHktMzItYnl0ZS1rZXktcmVwbGFjZS0wMDA=}
+    blind-index-key: ${BLIND_INDEX_KEY:ZGV2LW9ubHktMzItYnl0ZS1iaWtleS1yZXBsYWNlLTA=}
+    hmac-secret: ${HMAC_SECRET:ZGV2LW9ubHktaG1hYy1zZWNyZXQtcmVwbGFjZS0wMDAwMA==}
+
+  captcha:
+    provider: ${CAPTCHA_PROVIDER:noop}
+    secret: ${CAPTCHA_SECRET:}
+    verify-url: https://challenges.cloudflare.com/turnstile/v0/siteverify
+
+  rate-limit:
+    enabled: true
+    # Registration alone is three calls (send code, verify code, register), and
+    # people retry. Ten was tight enough that ordinary use tripped it.
+    auth-requests-per-minute: 40
+    general-requests-per-minute: 120
+
+  ai:
+    # 'mock' runs the offline rule-based analyser: no API key, no network.
+    provider: ${AI_PROVIDER:mock}
+    api-key: ${AI_API_KEY:}
+    base-url: ${AI_BASE_URL:https://api.openai.com/v1}
+    model: ${AI_MODEL:gpt-4o-mini}
+
+  speech:
+    provider: ${SPEECH_PROVIDER:mock}
+    api-key: ${SPEECH_API_KEY:}
+    base-url: ${SPEECH_BASE_URL:https://api.openai.com/v1}
+
+  storage:
+    path: ${STORAGE_PATH:./storage}
+
+logging:
+  level:
+    root: INFO
+    com.kannagi: INFO
+    org.springframework.security: WARN
