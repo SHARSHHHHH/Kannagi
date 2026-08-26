@@ -1,11 +1,13 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, Briefcase, FolderOpen, BookOpen, MessageSquare, Shield, Activity, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { LayoutDashboard, Users, Briefcase, FolderOpen, BookOpen, MessageSquare, Shield, Activity, ShieldQuestion, AlertTriangle, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 const SIDEBAR_NAV = [
   { to: '/admin/overview', label: 'Overview', icon: LayoutDashboard },
   { to: '/admin/users', label: 'Users', icon: Users },
   { to: '/admin/professionals', label: 'Professionals', icon: Briefcase },
+  { to: '/admin/professional-verification', label: 'Verification Queue', icon: ShieldQuestion },
+  { to: '/admin/escalated-cases', label: 'Escalated Cases', icon: AlertTriangle },
   { to: '/admin/cases', label: 'Cases', icon: FolderOpen },
   { to: '/admin/resources', label: 'Resources', icon: BookOpen },
   { to: '/admin/community', label: 'Community', icon: MessageSquare },

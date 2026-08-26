@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Building2, Scale } from 'lucide-react'
 import { setLegalPathway } from '@/api/cases'
 import { messageFrom } from '@/api/client'
@@ -56,6 +57,7 @@ export function LegalPathwayChooser({
   caseId: string
   onChosen: (updated: Case) => void
 }) {
+  const navigate = useNavigate()
   const [selected, setSelected] = useState<LegalPathway | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -65,7 +67,12 @@ export function LegalPathwayChooser({
     setError(null)
     setSaving(true)
     try {
-      onChosen(await setLegalPathway(caseId, selected))
+      const updated = await setLegalPathway(caseId, selected)
+      onChosen(updated)
+
+      if (selected === 'LEGAL_AID' || selected === 'PRIVATE_COUNSEL') {
+        navigate(`/lawyers?caseId=${caseId}&pathway=${selected}`)
+      }
     } catch (caught) {
       setError(messageFrom(caught, 'We could not save that choice. Please try again.'))
     } finally {

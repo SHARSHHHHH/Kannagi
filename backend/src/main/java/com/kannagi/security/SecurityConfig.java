@@ -45,6 +45,9 @@ public class SecurityConfig {
             "/api/auth/refresh",
             "/api/auth/forgot-password",
             "/api/auth/reset-password",
+            "/api/professional-auth/lawyer/register",
+            "/api/professional-auth/therapist/register",
+            "/api/professional-auth/login",
             "/api/config/brand",
             "/actuator/health",
             "/v3/api-docs/**",
@@ -94,6 +97,9 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/api/cases/*/messages").permitAll()
                     .requestMatchers(HttpMethod.PATCH, "/api/cases/*/legal-pathway").permitAll()
                     .requestMatchers(HttpMethod.DELETE, "/api/cases/*").permitAll()
+                    // She requests a professional from the case itself, using
+                    // the same access-key model as every other case sub-resource.
+                    .requestMatchers(HttpMethod.POST, "/api/cases/*/assignments").permitAll()
                     // Analysis, chat and transcription serve the anonymous path too.
                     .requestMatchers("/api/ai/**").permitAll()
                     .requestMatchers("/api/speech/**").permitAll()

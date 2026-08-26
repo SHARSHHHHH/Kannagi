@@ -27,7 +27,8 @@ public final class TestFixtures {
                 new AppProperties.RateLimit(false, 10, 120),
                 new AppProperties.Storage("./storage"),
                 new AppProperties.Ai("mock", "", "https://example.invalid", "test-model"),
-                new AppProperties.Speech("mock", "", "https://example.invalid")
+                new AppProperties.Speech("mock", "", "https://example.invalid"),
+                new AppProperties.Assignment(48)
         );
     }
 }

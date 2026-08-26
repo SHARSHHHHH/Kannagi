@@ -1,10 +1,15 @@
 package com.kannagi.case_management;
 
 import com.kannagi.TestFixtures;
+import com.kannagi.assignment.CaseAssignmentRepository;
+import com.kannagi.assignment.domain.AssignmentStatus;
+import com.kannagi.assignment.domain.CaseAssignment;
 import com.kannagi.audit.AuditService;
 import com.kannagi.case_management.domain.Case;
 import com.kannagi.case_management.domain.PrivacyMode;
 import com.kannagi.common.exception.NotFoundException;
+import com.kannagi.lawyer.ProfessionalRepository;
+import com.kannagi.lawyer.domain.Professional;
 import com.kannagi.privacy.crypto.TokenHasher;
 import com.kannagi.security.CurrentUser;
 import com.kannagi.user.domain.Role;
@@ -16,10 +21,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 /**
  * The security tests the specification calls the most important ones.
@@ -31,6 +39,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class CaseAccessGuardTest {
 
     private TokenHasher tokenHasher;
+    private ProfessionalRepository professionalRepository;
+    private CaseAssignmentRepository caseAssignmentRepository;
     private CaseAccessGuard guard;
 
     private final UUID userAId = UUID.randomUUID();
@@ -42,7 +52,10 @@ class CaseAccessGuardTest {
     @BeforeEach
     void setUp() {
         tokenHasher = new TokenHasher();
-        guard = new CaseAccessGuard(tokenHasher, Mockito.mock(AuditService.class));
+        professionalRepository = Mockito.mock(ProfessionalRepository.class);
+        caseAssignmentRepository = Mockito.mock(CaseAssignmentRepository.class);
+        guard = new CaseAccessGuard(tokenHasher, Mockito.mock(AuditService.class),
+                professionalRepository, caseAssignmentRepository);
     }
 
     private Case ownedBy(UUID ownerId) {
@@ -214,19 +227,52 @@ class CaseAccessGuardTest {
     class ProfessionalAccess {
 
         @Test
-        @DisplayName("no professional can reach a case before consent exists")
-        void professionalsAreLockedOutUntilPhaseEight() {
+        @DisplayName("a professional with no accepted assignment cannot reach the case")
+        void noAssignmentMeansNoAccess() {
             Case caseEntity = ownedBy(userAId);
 
             for (Role role : new Role[]{Role.LAWYER, Role.PSYCHOLOGIST, Role.SUPPORT_WORKER}) {
                 CurrentUser professional = new CurrentUser(UUID.randomUUID(), role);
-                assertThatCode(() ->
-                        guard.professionalMayAccess(caseEntity, professional)).doesNotThrowAnyException();
-                org.assertj.core.api.Assertions
-                        .assertThat(guard.professionalMayAccess(caseEntity, professional))
-                        .as("%s must not reach a case before consent is implemented", role)
-                        .isFalse();
+                assertThatThrownBy(() -> guard.requireAccess(caseEntity, professional, null))
+                        .as("%s with no assignment must not reach the case", role)
+                        .isInstanceOf(NotFoundException.class);
             }
+        }
+
+        @Test
+        @DisplayName("a professional with an ACCEPTED assignment can reach the case")
+        void acceptedAssignmentGrantsAccess() {
+            Case caseEntity = ownedBy(userAId);
+            UUID professionalUserId = UUID.randomUUID();
+            CurrentUser lawyer = new CurrentUser(professionalUserId, Role.LAWYER);
+
+            Professional professional = Professional.builder()
+                    .id(UUID.randomUUID()).userId(professionalUserId).build();
+            when(professionalRepository.findByUserId(professionalUserId))
+                    .thenReturn(Optional.of(professional));
+            when(caseAssignmentRepository.findFirstByCaseIdAndProfessionalIdAndStatus(
+                    caseEntity.getId(), professional.getId(), AssignmentStatus.ACCEPTED))
+                    .thenReturn(Optional.of(CaseAssignment.builder().build()));
+
+            assertThatCode(() -> guard.requireAccess(caseEntity, lawyer, null))
+                    .doesNotThrowAnyException();
+        }
+
+        @Test
+        @DisplayName("an OFFERED (not yet accepted) assignment does not grant access")
+        void offeredOnlyIsNotEnough() {
+            Case caseEntity = ownedBy(userAId);
+            UUID professionalUserId = UUID.randomUUID();
+            CurrentUser lawyer = new CurrentUser(professionalUserId, Role.LAWYER);
+
+            Professional professional = Professional.builder()
+                    .id(UUID.randomUUID()).userId(professionalUserId).build();
+            when(professionalRepository.findByUserId(professionalUserId))
+                    .thenReturn(Optional.of(professional));
+            // No stub for ACCEPTED lookup -> defaults to Optional.empty()
+
+            assertThatThrownBy(() -> guard.requireAccess(caseEntity, lawyer, null))
+                    .isInstanceOf(NotFoundException.class);
         }
     }
 

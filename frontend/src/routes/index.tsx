@@ -17,6 +17,13 @@ import { LegalPage } from '@/pages/LegalPage'
 import { PrivacyPage } from '@/pages/PrivacyPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { RegisterPage } from '@/pages/RegisterPage'
+import { LawyerRegisterPage } from '@/pages/professional/LawyerRegisterPage'
+import { TherapistRegisterPage } from '@/pages/professional/TherapistRegisterPage'
+import { ProfessionalLoginPage } from '@/pages/professional/ProfessionalLoginPage'
+import { LawyerDashboardPage } from '@/pages/professional/LawyerDashboardPage'
+import { TherapistDashboardPage } from '@/pages/professional/TherapistDashboardPage'
+import { AdminProfessionalVerification } from '@/pages/admin/AdminProfessionalVerification'
+import { AdminEscalatedCases } from '@/pages/admin/AdminEscalatedCases'
 import { AdminDashboard } from '@/pages/admin/AdminDashboard'
 import { AdminOverview } from '@/pages/admin/AdminOverview'
 import { AdminUsers } from '@/pages/admin/AdminUsers'
@@ -31,6 +38,8 @@ import { ProtectedRoute } from './ProtectedRoute'
 function DashboardOrAdmin() {
   const { user } = useAuth()
   if (user?.role === 'ADMIN') return <Navigate to="/admin/overview" replace />
+  if (user?.role === 'LAWYER') return <Navigate to="/lawyer/dashboard" replace />
+  if (user?.role === 'PSYCHOLOGIST') return <Navigate to="/therapist/dashboard" replace />
   return <DashboardPage />
 }
 
@@ -48,6 +57,22 @@ export function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/resume" element={<ResumeCasePage />} />
+      </Route>
+
+      {/* Lawyer and therapist registration render their own full-page chrome
+          (dark chambers vs calm jade), so they sit outside AuthLayout's
+          narrow centred column rather than inside it. */}
+      <Route path="/lawyer/register" element={<LawyerRegisterPage />} />
+      <Route path="/therapist/register" element={<TherapistRegisterPage />} />
+      <Route path="/professional/login" element={<ProfessionalLoginPage />} />
+      <Route path="/lawyer/login" element={<ProfessionalLoginPage />} />
+      <Route path="/therapist/login" element={<ProfessionalLoginPage />} />
+
+      <Route element={<ProtectedRoute allow={['LAWYER']} />}>
+        <Route path="/lawyer/dashboard" element={<LawyerDashboardPage />} />
+      </Route>
+      <Route element={<ProtectedRoute allow={['PSYCHOLOGIST']} />}>
+        <Route path="/therapist/dashboard" element={<TherapistDashboardPage />} />
       </Route>
 
       <Route element={<ProtectedRoute />}>
@@ -79,6 +104,8 @@ export function AppRoutes() {
           <Route path="/admin/community" element={<AdminCommunity />} />
           <Route path="/admin/security" element={<AdminSecurity />} />
           <Route path="/admin/system-health" element={<AdminSystemHealth />} />
+          <Route path="/admin/professional-verification" element={<AdminProfessionalVerification />} />
+          <Route path="/admin/escalated-cases" element={<AdminEscalatedCases />} />
         </Route>
       </Route>
 

@@ -1,9 +1,12 @@
 package com.kannagi.case_management;
 
+import com.kannagi.assignment.CaseAssignmentRepository;
+import com.kannagi.assignment.domain.AssignmentStatus;
 import com.kannagi.audit.AuditAction;
 import com.kannagi.audit.AuditService;
 import com.kannagi.case_management.domain.Case;
 import com.kannagi.common.exception.NotFoundException;
+import com.kannagi.lawyer.ProfessionalRepository;
 import com.kannagi.privacy.crypto.TokenHasher;
 import com.kannagi.security.CurrentUser;
 import com.kannagi.user.domain.Role;
@@ -29,6 +32,8 @@ public class CaseAccessGuard {
 
     private final TokenHasher tokenHasher;
     private final AuditService auditService;
+    private final ProfessionalRepository professionalRepository;
+    private final CaseAssignmentRepository caseAssignmentRepository;
 
     /**
      * @param caseEntity the case being opened
@@ -41,8 +46,11 @@ public class CaseAccessGuard {
         }
 
         boolean permitted = caseEntity.isAnonymous()
-                ? holdsValidAccessKey(caseEntity, accessKey)
-                : isOwner(caseEntity, currentUser);
+                // Anonymous cases open via the access key, or via a professional
+                // she has accepted an assignment with — the key is not the only
+                // door once she has chosen someone.
+                ? (holdsValidAccessKey(caseEntity, accessKey) || professionalMayAccess(caseEntity, currentUser))
+                : (isOwner(caseEntity, currentUser) || professionalMayAccess(caseEntity, currentUser));
 
         if (!permitted) {
             // Recorded as a failure so that repeated probing is visible, with
@@ -85,8 +93,10 @@ public class CaseAccessGuard {
     }
 
     /**
-     * Whether a professional may see this case at all. Consent is Phase 8; until
-     * then no professional route exists and this returns false for everyone.
+     * Whether a professional may see this case at all: only if they hold an
+     * ACCEPTED assignment on it. Offered-but-not-yet-accepted is not enough —
+     * a professional deciding whether to take a case sees the case file
+     * through the assignment offer itself, not through general case access.
      */
     public boolean professionalMayAccess(Case caseEntity, CurrentUser currentUser) {
         if (currentUser == null) {
@@ -96,11 +106,14 @@ public class CaseAccessGuard {
         boolean isProfessional = role == Role.LAWYER
                 || role == Role.PSYCHOLOGIST
                 || role == Role.SUPPORT_WORKER;
+        if (!isProfessional) {
+            return false;
+        }
 
-        // Deliberately false until a consent record can be checked. A
-        // professional seeing a case before Phase 8 would be a bug, not a
-        // convenience.
-        return isProfessional && false;
+        return professionalRepository.findByUserId(currentUser.id())
+                .map(professional -> caseAssignmentRepository.findFirstByCaseIdAndProfessionalIdAndStatus(
+                        caseEntity.getId(), professional.getId(), AssignmentStatus.ACCEPTED).isPresent())
+                .orElse(false);
     }
 
     private NotFoundException notFound() {

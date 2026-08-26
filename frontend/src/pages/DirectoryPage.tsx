@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Loader2, MapPin, Star } from 'lucide-react'
+import { Loader2, MapPin, Scale, Star } from 'lucide-react'
 import { lawyers, psychologists } from '@/api/support'
+import { getAccessKey } from '@/api/cases'
+import { requestAssignment } from '@/api/assignment'
 import { messageFrom } from '@/api/client'
 import { AnkletRule } from '@/components/brand/AnkletRule'
 import { Alert } from '@/components/ui/Alert'
@@ -9,6 +11,7 @@ import { Select } from '@/components/ui/Select'
 import { LANGUAGES } from '@/utils/languages'
 import { BookingDialog } from '@/components/BookingDialog'
 import { Button } from '@/components/ui/Button'
+import type { AssignmentType } from '@/types/verification'
 import type { Professional } from '@/types'
 
 const STATES = [
@@ -25,6 +28,8 @@ const STATES = [
 export function DirectoryPage({ kind }: { kind: 'LAWYER' | 'PSYCHOLOGIST' }) {
   const [params] = useSearchParams()
   const legalAidOnly = params.get('pathway') === 'LEGAL_AID'
+  const caseId = params.get('caseId')
+  const pathwayParam = params.get('pathway')
 
   const [results, setResults] = useState<Professional[]>([])
   const [notice, setNotice] = useState('')
@@ -33,6 +38,10 @@ export function DirectoryPage({ kind }: { kind: 'LAWYER' | 'PSYCHOLOGIST' }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [booking, setBooking] = useState<Professional | null>(null)
+
+  const [requestingId, setRequestingId] = useState<string | null>(null)
+  const [requestedIds, setRequestedIds] = useState<Set<string>>(new Set())
+  const [requestError, setRequestError] = useState<string | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -53,6 +62,22 @@ export function DirectoryPage({ kind }: { kind: 'LAWYER' | 'PSYCHOLOGIST' }) {
       .finally(() => setLoading(false))
   }, [kind, state, language, legalAidOnly])
 
+  async function handleRequestForCase(person: Professional) {
+    if (!caseId) return
+    setRequestError(null)
+    setRequestingId(person.id)
+    try {
+      const assignmentType: AssignmentType =
+        kind === 'LAWYER' && pathwayParam === 'LEGAL_AID' ? 'LEGAL_AID' : 'PRIVATE'
+      await requestAssignment(caseId, person.id, assignmentType, undefined, getAccessKey(caseId))
+      setRequestedIds((current) => new Set(current).add(person.id))
+    } catch (caught) {
+      setRequestError(messageFrom(caught, 'We could not send that request.'))
+    } finally {
+      setRequestingId(null)
+    }
+  }
+
   const heading = kind === 'LAWYER'
     ? legalAidOnly ? 'Lawyers who take legal-aid cases' : 'Find legal support'
     : 'Find psychological support'
@@ -68,6 +93,15 @@ export function DirectoryPage({ kind }: { kind: 'LAWYER' | 'PSYCHOLOGIST' }) {
           page explains where to ask.
         </p>
       )}
+
+      {caseId && (
+        <div className="mt-4 flex items-center gap-2 rounded-xl border border-jade-200 bg-jade-50 px-4 py-3 text-sm text-jade-800">
+          <Scale className="h-4 w-4 shrink-0" aria-hidden="true" />
+          Browsing on behalf of your case. Choosing someone below sends them your case file
+          as a request — they can accept or decline it.
+        </div>
+      )}
+      {requestError && <Alert tone="safety" className="mt-4">{requestError}</Alert>}
 
       <AnkletRule className="my-8 max-w-sm" />
 
@@ -155,8 +189,18 @@ export function DirectoryPage({ kind }: { kind: 'LAWYER' | 'PSYCHOLOGIST' }) {
                 </p>
               )}
 
-              <Button size="sm" className="mt-4 w-full" onClick={() => setBooking(person)}>
-                Contact anonymously
+              <Button
+                size="sm"
+                className="mt-4 w-full"
+                onClick={() => (caseId ? handleRequestForCase(person) : setBooking(person))}
+                loading={requestingId === person.id}
+                disabled={caseId ? requestedIds.has(person.id) : false}
+              >
+                {caseId
+                  ? requestedIds.has(person.id)
+                    ? 'Request sent'
+                    : 'Request for my case'
+                  : 'Contact anonymously'}
               </Button>
             </li>
           ))}

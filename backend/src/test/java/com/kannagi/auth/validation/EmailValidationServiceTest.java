@@ -17,7 +17,7 @@ class EmailValidationServiceTest {
         return new AppProperties(
                 base.brand(), base.caseRef(),
                 new AppProperties.Security(List.of("http://localhost:5173"), 5, 15, enabled),
-                base.jwt(), base.crypto(), base.captcha(), base.rateLimit(), base.storage(), base.ai(), base.speech());
+                base.jwt(), base.crypto(), base.captcha(), base.rateLimit(), base.storage(), base.ai(), base.speech(), base.assignment());
     }
 
     private final EmailValidationService offline =

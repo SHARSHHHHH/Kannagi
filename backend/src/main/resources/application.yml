@@ -131,6 +131,12 @@ app:
     api-key: ${SPEECH_API_KEY:}
     base-url: ${SPEECH_BASE_URL:https://api.openai.com/v1}
 
+  assignment:
+    # How long a professional has to accept or reject an offered case before
+    # it becomes eligible for escalation to a public assignment. Short by
+    # default so the escalation path is demonstrable without waiting.
+    notice-period-hours: ${ASSIGNMENT_NOTICE_HOURS:48}
+
   storage:
     path: ${STORAGE_PATH:./storage}
 

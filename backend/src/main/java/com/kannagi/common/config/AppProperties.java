@@ -19,7 +19,8 @@ public record AppProperties(
         RateLimit rateLimit,
         Storage storage,
         Ai ai,
-        Speech speech
+        Speech speech,
+        Assignment assignment
 ) {
     public record Brand(String name, String displayName, String tagline, String supportEmail) {}
 
@@ -43,4 +44,7 @@ public record AppProperties(
     public record Ai(String provider, String apiKey, String baseUrl, String model) {}
 
     public record Speech(String provider, String apiKey, String baseUrl) {}
+
+    /** How long a professional has to accept or reject an offered case before it is eligible for escalation to a public assignment. */
+    public record Assignment(int noticePeriodHours) {}
 }

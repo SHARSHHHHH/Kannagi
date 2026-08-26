@@ -4,6 +4,7 @@ import com.kannagi.lawyer.domain.Professional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -19,4 +20,9 @@ public interface ProfessionalRepository extends JpaRepository<Professional, UUID
     List<Professional> findByKindAndAcceptingClientsTrue(Professional.Kind kind);
 
     long countByKind(Professional.Kind kind);
+
+    /** A professional's own directory row, from the account they signed in with. */
+    Optional<Professional> findByUserId(UUID userId);
+
+    List<Professional> findByVerifiedFalseAndIsDemoFalseOrderByCreatedAtAsc();
 }

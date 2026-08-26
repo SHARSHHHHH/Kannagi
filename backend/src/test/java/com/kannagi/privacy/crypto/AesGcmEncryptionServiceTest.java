@@ -70,7 +70,7 @@ class AesGcmEncryptionServiceTest {
         AppProperties bad = new AppProperties(
                 good.brand(), good.caseRef(), good.security(), good.jwt(),
                 new AppProperties.Crypto(TestFixtures.key(16, (byte) 1), good.crypto().blindIndexKey(), good.crypto().hmacSecret()),
-                good.captcha(), good.rateLimit(), good.storage(), good.ai(), good.speech());
+                good.captcha(), good.rateLimit(), good.storage(), good.ai(), good.speech(), good.assignment());
 
         assertThatThrownBy(() -> new AesGcmEncryptionService(bad))
                 .isInstanceOf(IllegalStateException.class)

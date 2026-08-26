@@ -14,4 +14,7 @@ public interface ConsentRepository extends JpaRepository<Consent, UUID> {
 
     Optional<Consent> findByUserIdAndConsentTypeAndRevokedAtIsNull(
             UUID userId, Consent.Type consentType);
+
+    Optional<Consent> findByCaseIdAndConsentTypeAndRevokedAtIsNull(
+            UUID caseId, Consent.Type consentType);
 }

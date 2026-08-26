@@ -36,7 +36,7 @@ class JwtServiceTest {
                 good.brand(), good.caseRef(), good.security(),
                 new AppProperties.Jwt("test-issuer", TestFixtures.key(48, (byte) 42),
                         good.jwt().refreshSecret(), 900, 1209600),
-                good.crypto(), good.captcha(), good.rateLimit(), good.storage(), good.ai(), good.speech());
+                good.crypto(), good.captcha(), good.rateLimit(), good.storage(), good.ai(), good.speech(), good.assignment());
 
         String foreign = new JwtService(other)
                 .issueAccessToken(UUID.randomUUID(), Role.ADMIN);
@@ -52,7 +52,7 @@ class JwtServiceTest {
                 good.brand(), good.caseRef(), good.security(),
                 new AppProperties.Jwt("someone-else", good.jwt().secret(),
                         good.jwt().refreshSecret(), 900, 1209600),
-                good.crypto(), good.captcha(), good.rateLimit(), good.storage(), good.ai(), good.speech());
+                good.crypto(), good.captcha(), good.rateLimit(), good.storage(), good.ai(), good.speech(), good.assignment());
 
         String foreign = new JwtService(other)
                 .issueAccessToken(UUID.randomUUID(), Role.USER);

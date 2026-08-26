@@ -21,6 +21,8 @@ const SUPPORT_LINKS = [
   { label: 'Privacy charter', to: '/privacy' },
   { label: 'Reopen a case', to: '/resume' },
   { label: 'Accessibility', to: '/accessibility' },
+  { label: 'Lawyer sign in', to: '/lawyer/login' },
+  { label: 'Therapist sign in', to: '/therapist/login' },
 ]
 
 export function PublicFooter() {
